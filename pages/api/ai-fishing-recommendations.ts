@@ -119,8 +119,23 @@ export default async function handler(req: any, res: any) {
               species: ['string'],
               activeSpecies: ['string'],
               baitRecommendations: {
-                baitsToUse: [{ name: 'string', confidence: 10, species: ['string'], type: ['string'] }],
-                stylesToUse: [{ name: 'string', confidence: 10, species: ['string'], type: ['string'], waterClarity: 'optional string' }],
+                baitsToUse: [
+                  {
+                    name: 'string',
+                    confidence: 10,
+                    species: ['string'],
+                    type: ['string'],
+                  },
+                ],
+                stylesToUse: [
+                  {
+                    name: 'string',
+                    confidence: 10,
+                    species: ['string'],
+                    type: ['string'],
+                    waterClarity: 'optional string',
+                  },
+                ],
               },
               tackle: [
                 {
@@ -154,8 +169,12 @@ export default async function handler(req: any, res: any) {
           },
           candidates: fallback,
           outputSchema: {
-            baitsToUse: [{ name: 'string', confidence: 10, aiReason: 'optional' }],
-            stylesToUse: [{ name: 'string', confidence: 10, aiReason: 'optional' }],
+            baitsToUse: [
+              { name: 'string', confidence: 10, aiReason: 'optional' },
+            ],
+            stylesToUse: [
+              { name: 'string', confidence: 10, aiReason: 'optional' },
+            ],
           },
         })
 
@@ -240,6 +259,8 @@ export default async function handler(req: any, res: any) {
     if (mode === 'generate_all') {
       return res.status(200).json({ generatedData: null, source: 'fallback' })
     }
-    return res.status(200).json({ recommendations: fallback, source: 'fallback' })
+    return res
+      .status(200)
+      .json({ recommendations: fallback, source: 'fallback' })
   }
 }

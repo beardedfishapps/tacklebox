@@ -95,7 +95,9 @@ export async function getAiFishingRecommendations(
   }
 }
 
-export async function getAiGeneratedFishingData(payload: AiFishingPayload): Promise<{
+export async function getAiGeneratedFishingData(
+  payload: AiFishingPayload
+): Promise<{
   species: string[]
   activeSpecies: string[]
   seasons: string

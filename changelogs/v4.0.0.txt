@@ -12,7 +12,7 @@ cc8cacf added species filters
 65fb4de streamlined app and removed links to personal items
 7c1c695 changed contact email
 feee8d0 update fall colors
-b847b53 changed weight of moon phase and barometric pressue, added transitions to seasons
+b847b53 changed weight of moon phase and barometric pressure, added transitions to seasons
 7bb933e added about bearded fish
 97ba0ed fixed seasons for recipes
 7565c84 ran lintfix

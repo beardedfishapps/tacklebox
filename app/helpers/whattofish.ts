@@ -368,7 +368,9 @@ export function pickTackle(
 export function isTackleForWeather(tackle: Tackle, waterTemp: number): boolean {
   let isTackleForWeather = true
   const tackleType = Array.isArray(tackle.type) ? tackle.type : []
-  const tackleWaterTemp = Array.isArray(tackle.waterTemp) ? tackle.waterTemp : []
+  const tackleWaterTemp = Array.isArray(tackle.waterTemp)
+    ? tackle.waterTemp
+    : []
   const tackleDepth = Array.isArray(tackle.depth) ? tackle.depth : []
 
   if (!tackleType.includes('still')) {

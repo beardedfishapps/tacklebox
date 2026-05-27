@@ -53,13 +53,17 @@ const server = setupServer(
   rest.get('/api/colors', (req, res, ctx) => {
     return res(
       ctx.json({
-        colors: [{ name: 'green pumpkin', confidence: 1, type: [], weather: '' }],
+        colors: [
+          { name: 'green pumpkin', confidence: 1, type: [], weather: '' },
+        ],
       })
     )
   }),
   rest.get('/api/styles', (req, res, ctx) => {
     return res(
-      ctx.json({ styles: [{ name: 'natural', confidence: 1, type: [], species: [] }] })
+      ctx.json({
+        styles: [{ name: 'natural', confidence: 1, type: [], species: [] }],
+      })
     )
   })
 )
@@ -147,8 +151,6 @@ describe('WhatToFish', () => {
   })
 
   it('loads tackle when freshwater is selected', async () => {
-    const user = userEvent.setup()
-
     render(<WhatToFish />)
 
     const heading = await screen.findByLabelText('ZIP Code')

@@ -77,7 +77,7 @@ export default function ChangeLog() {
             <p className="mb-4 last:mb-0">changed contact email</p>
             <p className="mb-4 last:mb-0">update fall colors</p>
             <p className="mb-4 last:mb-0">
-              changed weight of moon phase and barometric pressue, added
+              changed weight of moon phase and barometric pressure, added
               transitions to seasons
             </p>
             <p className="mb-4 last:mb-0">added about bearded fish</p>
