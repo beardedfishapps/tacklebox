@@ -10,12 +10,19 @@ import {
   getWeatherValues,
   getSpecies,
 } from '@/app/helpers/whattofish'
+import {
+  getAiFishingRecommendations,
+  getAiGeneratedFishingData,
+  isAiEnabled,
+  normalizeConfidence,
+} from '@/app/helpers/aiFishingAssist'
 import { convertArrayToCommaSeparatedString } from '@/app/helpers/string'
 
 export async function pickBaitRecommendations(
   weather: any,
   species: string[],
-  seasons: string
+  seasons: string,
+  waterType: string
 ): Promise<BaitRecommendations> {
   let baitRecommendations = new BaitRecommendations()
   let stylesToUse: string[] = []
@@ -104,6 +111,27 @@ export async function pickBaitRecommendations(
     // a must be equal to b
     return 0
   })
+
+  baitsToUse = baitsToUse.map((bait: any) => normalizeConfidence(bait))
+  stylesToUse = stylesToUse.map((style: any) => normalizeConfidence(style))
+
+  const aiRecommendations = await getAiFishingRecommendations({
+    location: weather.location,
+    weather,
+    species,
+    seasons,
+    waterType,
+    candidates: {
+      baitsToUse,
+      stylesToUse,
+    },
+  })
+
+  if (aiRecommendations) {
+    baitRecommendations.stylesToUse = aiRecommendations.stylesToUse
+    baitRecommendations.baitsToUse = aiRecommendations.baitsToUse
+    return baitRecommendations
+  }
 
   baitRecommendations.stylesToUse = stylesToUse
   baitRecommendations.baitsToUse = baitsToUse
@@ -357,13 +385,6 @@ export async function getFreshwaterFishingData(
 
   setLoadingText('Loading weather...')
   const weather = await getWeather(zip, cityState, geolocation)
-  let tackleList: Tackle[] = []
-  setLoadingText('Loading tackle...')
-  await fetch('/api/tackle')
-    .then((res) => res.json())
-    .then((json) => {
-      tackleList = json.tackle
-    })
 
   const location =
     geolocation !== '' ? geolocation : cityState !== '' ? cityState : zip
@@ -377,6 +398,47 @@ export async function getFreshwaterFishingData(
     fishingData.seasons = getFishingSeasons(weather, cityState, cityStateList)
     setLoadingText('Getting weather values...')
     fishingData.weather = getWeatherValues(weather, fishingData.seasons)
+
+    if (isAiEnabled()) {
+      try {
+        setLoadingText('AI is analyzing fishing conditions...')
+        const aiData = await getAiGeneratedFishingData({
+          location: weather.location,
+          weather,
+          species: species || [],
+          seasons: fishingData.seasons,
+          waterType,
+          candidates: { baitsToUse: [], stylesToUse: [] },
+        })
+
+        if (aiData) {
+          fishingData.activeSpecies = aiData.activeSpecies
+          fishingData.species =
+            species !== undefined && species.length > 0
+              ? species
+              : aiData.species
+          if (aiData.seasons && aiData.seasons.trim() !== '') {
+            fishingData.seasons = aiData.seasons
+          }
+          fishingData.bestFishingTimes = aiData.bestFishingTimes
+          fishingData.seasonPhases = aiData.seasonPhases
+          fishingData.baitRecommendations = aiData.baitRecommendations
+          fishingData.tackle = aiData.tackle
+          fishingData.aiGenerated = true
+          fishingData.aiSource = aiData.source
+          setLoadingText('Determining fishing conditions...')
+          fishingData.fishingConditions = getFishingConditions(
+            weather,
+            fishingData,
+            weatherForecastToUse
+          )
+          setLoadingText('Loading...')
+          return fishingData
+        }
+      } catch (error) {
+        console.error(error)
+      }
+    }
 
     const waterTemp =
       weatherForecastToUse == 'current'
@@ -397,8 +459,16 @@ export async function getFreshwaterFishingData(
     fishingData.baitRecommendations = await pickBaitRecommendations(
       weather,
       fishingData.species,
-      fishingData.seasons
+      fishingData.seasons,
+      waterType
     )
+    let tackleList: Tackle[] = []
+    setLoadingText('Loading tackle...')
+    await fetch('/api/tackle')
+      .then((res) => res.json())
+      .then((json) => {
+        tackleList = json.tackle
+      })
     setLoadingText('Picking tackle...')
     fishingData.tackle = await pickTackle(
       tackleList,

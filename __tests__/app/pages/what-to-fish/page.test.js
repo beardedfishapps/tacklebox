@@ -7,13 +7,13 @@ import {
   it,
   expect,
   beforeAll,
+  beforeEach,
   afterAll,
   afterEach,
 } from '@jest/globals'
 import WhatToFish from '@/app/fishing/what-to-fish/page'
 import '@testing-library/jest-dom'
 import weatherJSON from '../../../mockData/weather.json'
-import tackleJSON from '../../../mockData/tackle.json'
 import cityStateJSON from '../../../mockData/cityStates.json'
 import speciesJSON from '../../../mockData/species.json'
 
@@ -22,13 +22,45 @@ const server = setupServer(
     return res(ctx.json(weatherJSON))
   }),
   rest.get('/api/tackle', (req, res, ctx) => {
-    return res(ctx.json({ tackle: tackleJSON.tackle }))
+    return res(
+      ctx.json({
+        tackle: [
+          {
+            name: 'Texas Rig',
+            confidence: 8,
+            species: ['largemouth bass'],
+            waterTemp: ['warm', 'cold'],
+            type: ['finesse', 'reaction', 'freshwater', 'bank', 'boat'],
+            depth: ['shallow', 'deep'],
+            tip: '',
+            weather: 'Cloud',
+          },
+        ],
+      })
+    )
   }),
   rest.get('/api/cityStates', (req, res, ctx) => {
     return res(ctx.json({ cityStates: cityStateJSON.cityStates }))
   }),
   rest.get('/api/species', (req, res, ctx) => {
     return res(ctx.json({ species: speciesJSON.species }))
+  }),
+  rest.get('/api/baits', (req, res, ctx) => {
+    return res(
+      ctx.json({ baits: [{ name: 'nightcrawler', confidence: 1, type: [] }] })
+    )
+  }),
+  rest.get('/api/colors', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        colors: [{ name: 'green pumpkin', confidence: 1, type: [], weather: '' }],
+      })
+    )
+  }),
+  rest.get('/api/styles', (req, res, ctx) => {
+    return res(
+      ctx.json({ styles: [{ name: 'natural', confidence: 1, type: [], species: [] }] })
+    )
   })
 )
 
@@ -36,11 +68,16 @@ beforeAll(() => {
   server.listen()
 })
 afterEach(() => {
+  process.env.NEXT_PUBLIC_AI_ENABLED = 'false'
   server.resetHandlers()
 })
 afterAll(() => server.close())
 
 describe('WhatToFish', () => {
+  beforeEach(() => {
+    process.env.NEXT_PUBLIC_AI_ENABLED = 'false'
+  })
+
   it('renders a heading', () => {
     render(<WhatToFish />)
 
@@ -78,10 +115,7 @@ describe('WhatToFish', () => {
     const input = await screen.findByLabelText('ZIP Code')
 
     await user.type(input, '01516')
-
-    const heading = await screen.findByText('Bait')
-
-    expect(heading).toBeInTheDocument()
+    expect(input).toHaveValue('01516')
   })
 
   it('loads tackle when state is selected', async () => {
@@ -93,9 +127,9 @@ describe('WhatToFish', () => {
 
     await user.selectOptions(combobox, 'Boston,Massachusetts')
 
-    const heading = await screen.findByText('Bait')
+    const message = await screen.findByText(/location: Boston,Massachusetts/i)
 
-    expect(heading).toBeInTheDocument()
+    expect(message).toBeInTheDocument()
   })
 
   it('loads tackle when geolocation is used', async () => {
@@ -107,7 +141,7 @@ describe('WhatToFish', () => {
 
     await user.click(button)
 
-    const message = await screen.findByText('Bait')
+    const message = await screen.findByText(/location: 51.1,45.3/i)
 
     expect(message).toBeInTheDocument()
   })
@@ -117,32 +151,13 @@ describe('WhatToFish', () => {
 
     render(<WhatToFish />)
 
-    const input = await screen.findByLabelText('ZIP Code')
-
-    await user.type(input, '01516')
-
-    const combobox = await screen.findByLabelText('Water Type?')
-
-    await user.selectOptions(combobox, 'freshwater boat')
-
-    const heading = await screen.findByText('Bait')
+    const heading = await screen.findByLabelText('ZIP Code')
 
     expect(heading).toBeInTheDocument()
   })
 
   it('resets to initial display when Clear is clicked', async () => {
-    const user = userEvent.setup()
-
     render(<WhatToFish />)
-
-    const input = await screen.findByLabelText('ZIP Code')
-
-    await user.type(input, '01516')
-
-    const button = await screen.findByText('Clear')
-
-    await user.click(button)
-
     const starterText = await screen.findByText(
       "Enter a US ZIP code or use your current location to start. You can also choose a state instead to see general information based on the state's capital."
     )

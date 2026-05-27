@@ -200,7 +200,7 @@ export default function WhatToFish() {
             m.severity = 'alert'
           }
         } catch (error: any) {
-          m.message = error
+          m.message = error?.message ? error.message : String(error)
           m.severity = 'error'
         }
 

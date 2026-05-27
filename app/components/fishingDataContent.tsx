@@ -149,8 +149,24 @@ export default function FishingDataContent({ data }: Props) {
       .filter((t) => getTackleSubtext(t) !== '')
   }
 
+  const fallbackOkTime =
+    !data.seasons.includes('summer') && !data.seasons.includes('winter')
+      ? 'early morning'
+      : 'late morning/early afternoon'
+  const fallbackGoodTime =
+    !data.seasons.includes('summer') && !data.seasons.includes('winter')
+      ? 'late morning/early afternoon'
+      : 'early morning'
+  const fallbackGreatTime = 'late afternoon/early evening'
+
   return (
     <div>
+      {data.aiGenerated && (
+        <div className="mb-4 p-3 border border-yellow-400 rounded-md text-yellow-400">
+          AI-generated recommendations
+          {data.aiSource ? ` (${data.aiSource})` : ''}
+        </div>
+      )}
       <hr className="mb-8" />
       <div className="flex flex-row justify-between pt-4 pb-4 border border-slate-50 rounded-md">
         <button
@@ -495,23 +511,29 @@ export default function FishingDataContent({ data }: Props) {
               isExpandedByDefault={true}
             >
               <div>
-                <p>
-                  OK:{' '}
-                  {!data.seasons.includes('summer') &&
-                  !data.seasons.includes('winter')
-                    ? 'early morning'
-                    : 'late morning/early afternoon'}
-                </p>
-                <p>
-                  Good:{' '}
-                  {!data.seasons.includes('summer') &&
-                  !data.seasons.includes('winter')
-                    ? 'late morning/early afternoon'
-                    : 'early morning'}
-                </p>
-                <p>Great: late afternoon/early evening</p>
+                <p>OK: {data.bestFishingTimes.ok || fallbackOkTime}</p>
+                <p>Good: {data.bestFishingTimes.good || fallbackGoodTime}</p>
+                <p>Great: {data.bestFishingTimes.great || fallbackGreatTime}</p>
               </div>
             </ContentSection>
+
+            {data.seasonPhases.length > 0 && (
+              <ContentSection
+                title="Species Season Phases"
+                isExpandedByDefault={true}
+              >
+                <div>
+                  {data.seasonPhases.map((phase, index) => (
+                    <div key={index} className="mb-4 last:mb-0">
+                      <p>
+                        {phase.species}: {phase.phase}
+                      </p>
+                      {phase.notes && <p className="text-sm">{phase.notes}</p>}
+                    </div>
+                  ))}
+                </div>
+              </ContentSection>
+            )}
 
             <ContentSection
               title="Astrological Info"

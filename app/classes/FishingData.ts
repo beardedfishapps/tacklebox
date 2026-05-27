@@ -11,6 +11,19 @@ export default class FishingData {
   public species: string[]
   public fishingConditions: FishingConditions
   public activeSpecies: string[]
+  public aiGenerated: boolean
+  public aiSource: string
+  public bestFishingTimes: {
+    ok: string
+    good: string
+    great: string
+  }
+  public seasonPhases: {
+    species: string
+    phase: string
+    confidence: number
+    notes?: string
+  }[]
 
   constructor() {
     this.baitRecommendations = new BaitRecommendations()
@@ -20,5 +33,13 @@ export default class FishingData {
     this.species = []
     this.fishingConditions = new FishingConditions()
     this.activeSpecies = []
+    this.aiGenerated = false
+    this.aiSource = ''
+    this.bestFishingTimes = {
+      ok: '',
+      good: '',
+      great: '',
+    }
+    this.seasonPhases = []
   }
 }

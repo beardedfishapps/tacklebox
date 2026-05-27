@@ -367,30 +367,33 @@ export function pickTackle(
 
 export function isTackleForWeather(tackle: Tackle, waterTemp: number): boolean {
   let isTackleForWeather = true
+  const tackleType = Array.isArray(tackle.type) ? tackle.type : []
+  const tackleWaterTemp = Array.isArray(tackle.waterTemp) ? tackle.waterTemp : []
+  const tackleDepth = Array.isArray(tackle.depth) ? tackle.depth : []
 
-  if (!tackle.type.includes('still')) {
+  if (!tackleType.includes('still')) {
     if (waterTemp > warmWaterMin) {
-      if (!tackle.waterTemp.includes('warm')) {
+      if (!tackleWaterTemp.includes('warm')) {
         isTackleForWeather = false
       }
 
       if (waterTemp > warmWaterMax) {
-        if (!tackle.depth.includes('deep')) {
+        if (!tackleDepth.includes('deep')) {
           isTackleForWeather = false
         }
-      } else if (!tackle.depth.includes('shallow')) {
+      } else if (!tackleDepth.includes('shallow')) {
         isTackleForWeather = false
       }
     } else {
-      if (!tackle.waterTemp.includes('cold')) {
+      if (!tackleWaterTemp.includes('cold')) {
         isTackleForWeather = false
       }
 
-      if (!tackle.type.includes('finesse')) {
+      if (!tackleType.includes('finesse')) {
         isTackleForWeather = false
       }
 
-      if (!tackle.depth.includes('deep')) {
+      if (!tackleDepth.includes('deep')) {
         isTackleForWeather = false
       }
     }
