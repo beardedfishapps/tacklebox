@@ -17,6 +17,10 @@ export async function getSpecies(
   let species: Species[] = []
   let wiggle = 2.5
 
+  if (waterTemp < 30) {
+    return ['Not ideal fishing weather for any species']
+  }
+
   try {
     await fetch('/api/species')
       .then((res) => res.json())

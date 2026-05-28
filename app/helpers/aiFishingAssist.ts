@@ -65,31 +65,34 @@ export async function getAiFishingRecommendations(
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS)
-    const res = await fetch('/api/ai-fishing-recommendations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-      signal: controller.signal,
-    })
-    clearTimeout(timeout)
+    try {
+      const res = await fetch('/api/ai-fishing-recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      })
 
-    if (!res.ok) {
-      return null
+      if (!res.ok) {
+        return null
+      }
+
+      const json = await res.json()
+      if (!json || !json.recommendations) {
+        return null
+      }
+
+      const recommendations = new BaitRecommendations()
+      recommendations.baitsToUse = sortByConfidenceDesc(
+        (json.recommendations.baitsToUse || []).map(normalizeConfidence)
+      )
+      recommendations.stylesToUse = sortByConfidenceDesc(
+        (json.recommendations.stylesToUse || []).map(normalizeConfidence)
+      )
+      return recommendations
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const json = await res.json()
-    if (!json || !json.recommendations) {
-      return null
-    }
-
-    const recommendations = new BaitRecommendations()
-    recommendations.baitsToUse = sortByConfidenceDesc(
-      (json.recommendations.baitsToUse || []).map(normalizeConfidence)
-    )
-    recommendations.stylesToUse = sortByConfidenceDesc(
-      (json.recommendations.stylesToUse || []).map(normalizeConfidence)
-    )
-    return recommendations
   } catch {
     return null
   }
@@ -123,60 +126,63 @@ export async function getAiGeneratedFishingData(
   try {
     const controller = new AbortController()
     const timeout = setTimeout(() => controller.abort(), AI_REQUEST_TIMEOUT_MS)
-    const res = await fetch('/api/ai-fishing-recommendations', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        ...payload,
-        mode: 'generate_all',
-      }),
-      signal: controller.signal,
-    })
-    clearTimeout(timeout)
+    try {
+      const res = await fetch('/api/ai-fishing-recommendations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          mode: 'generate_all',
+        }),
+        signal: controller.signal,
+      })
 
-    if (!res.ok) {
-      return null
-    }
+      if (!res.ok) {
+        return null
+      }
 
-    const json = await res.json()
-    if (!json || !json.generatedData) {
-      return null
-    }
+      const json = await res.json()
+      if (!json || !json.generatedData) {
+        return null
+      }
 
-    const baitRecommendations = new BaitRecommendations()
-    baitRecommendations.baitsToUse = sortByConfidenceDesc(
-      (json.generatedData?.baitRecommendations?.baitsToUse || []).map(
-        normalizeConfidence
+      const baitRecommendations = new BaitRecommendations()
+      baitRecommendations.baitsToUse = sortByConfidenceDesc(
+        (json.generatedData?.baitRecommendations?.baitsToUse || []).map(
+          normalizeConfidence
+        )
       )
-    )
-    baitRecommendations.stylesToUse = sortByConfidenceDesc(
-      (json.generatedData?.baitRecommendations?.stylesToUse || []).map(
-        normalizeConfidence
+      baitRecommendations.stylesToUse = sortByConfidenceDesc(
+        (json.generatedData?.baitRecommendations?.stylesToUse || []).map(
+          normalizeConfidence
+        )
       )
-    )
 
-    return {
-      species: Array.isArray(json.generatedData.species)
-        ? json.generatedData.species
-        : [],
-      activeSpecies: Array.isArray(json.generatedData.activeSpecies)
-        ? json.generatedData.activeSpecies
-        : [],
-      seasons:
-        typeof json.generatedData.seasons === 'string'
-          ? json.generatedData.seasons
-          : '',
-      bestFishingTimes: {
-        ok: json.generatedData?.bestFishingTimes?.ok || '',
-        good: json.generatedData?.bestFishingTimes?.good || '',
-        great: json.generatedData?.bestFishingTimes?.great || '',
-      },
-      seasonPhases: Array.isArray(json.generatedData.seasonPhases)
-        ? json.generatedData.seasonPhases
-        : [],
-      baitRecommendations,
-      tackle: (json.generatedData.tackle || []).map(normalizeTackleItem),
-      source: json.source || 'ai',
+      return {
+        species: Array.isArray(json.generatedData.species)
+          ? json.generatedData.species
+          : [],
+        activeSpecies: Array.isArray(json.generatedData.activeSpecies)
+          ? json.generatedData.activeSpecies
+          : [],
+        seasons:
+          typeof json.generatedData.seasons === 'string'
+            ? json.generatedData.seasons
+            : '',
+        bestFishingTimes: {
+          ok: json.generatedData?.bestFishingTimes?.ok || '',
+          good: json.generatedData?.bestFishingTimes?.good || '',
+          great: json.generatedData?.bestFishingTimes?.great || '',
+        },
+        seasonPhases: Array.isArray(json.generatedData.seasonPhases)
+          ? json.generatedData.seasonPhases
+          : [],
+        baitRecommendations,
+        tackle: (json.generatedData.tackle || []).map(normalizeTackleItem),
+        source: json.source || 'ai',
+      }
+    } finally {
+      clearTimeout(timeout)
     }
   } catch {
     return null

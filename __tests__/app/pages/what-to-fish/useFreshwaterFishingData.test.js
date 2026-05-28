@@ -19,6 +19,7 @@ let tackleList = []
 let cityStatesList = []
 let date = new Date()
 let weatherData = {}
+const originalAiEnabled = process.env.NEXT_PUBLIC_AI_ENABLED
 
 const server = setupServer(
   rest.get('/api/weather', (req, res, ctx) => {
@@ -26,10 +27,62 @@ const server = setupServer(
   }),
   rest.get('/api/species', (req, res, ctx) => {
     return res(ctx.json({ species: speciesJSON.species }))
+  }),
+  rest.get('/api/tackle', (req, res, ctx) => {
+    return res(ctx.json({ tackle: tackleList }))
+  }),
+  rest.get('/api/baits', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        baits: [
+          {
+            name: 'worm',
+            confidence: 10,
+            species: ['bass'],
+            type: ['freshwater'],
+          },
+        ],
+      })
+    )
+  }),
+  rest.get('/api/colors', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        colors: [
+          {
+            name: 'dark',
+            confidence: 10,
+            type: ['freshwater'],
+            weather: 'cloudy',
+          },
+          {
+            name: 'white',
+            confidence: 10,
+            type: ['freshwater'],
+            weather: 'cloudy',
+          },
+        ],
+      })
+    )
+  }),
+  rest.get('/api/styles', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        styles: [
+          {
+            name: 'natural',
+            confidence: 10,
+            species: ['largemouth bass'],
+            type: ['freshwater'],
+          },
+        ],
+      })
+    )
   })
 )
 
 beforeAll(() => {
+  process.env.NEXT_PUBLIC_AI_ENABLED = 'false'
   resetTestData()
   server.listen()
 })
@@ -37,7 +90,10 @@ afterEach(() => {
   resetTestData()
   server.resetHandlers()
 })
-afterAll(() => server.close())
+afterAll(() => {
+  process.env.NEXT_PUBLIC_AI_ENABLED = originalAiEnabled
+  server.close()
+})
 
 function resetTestData() {
   // eslint-disable-next-line
@@ -440,7 +496,9 @@ describe('useFishingData', () => {
     )
 
     expect(
-      result.baitRecommendations.stylesToUse.includes('natural')
+      result.baitRecommendations.stylesToUse.some(
+        (style) => style.name === 'natural'
+      )
     ).toBeTruthy()
   })
 
@@ -457,7 +515,9 @@ describe('useFishingData', () => {
       'freshwater bank'
     )
 
-    expect(result.baitRecommendations.stylesToUse.includes('dark')).toBeTruthy()
+    expect(
+      result.baitRecommendations.stylesToUse.some((style) => style.name === 'dark')
+    ).toBeTruthy()
   })
 
   it("doesn't load when state not selected and zip length < 5", async () => {

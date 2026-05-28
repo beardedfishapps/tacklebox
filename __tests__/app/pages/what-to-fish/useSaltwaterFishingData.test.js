@@ -19,6 +19,7 @@ let tackleList = []
 let cityStatesList = []
 let date = new Date()
 let weatherData = {}
+const originalAiEnabled = process.env.NEXT_PUBLIC_AI_ENABLED
 
 const server = setupServer(
   rest.get('/api/weather', (req, res, ctx) => {
@@ -26,10 +27,14 @@ const server = setupServer(
   }),
   rest.get('/api/species', (req, res, ctx) => {
     return res(ctx.json({ species: speciesJSON.species }))
+  }),
+  rest.get('/api/tackle', (req, res, ctx) => {
+    return res(ctx.json({ tackle: tackleList }))
   })
 )
 
 beforeAll(() => {
+  process.env.NEXT_PUBLIC_AI_ENABLED = 'false'
   resetTestData()
   server.listen()
 })
@@ -37,7 +42,10 @@ afterEach(() => {
   resetTestData()
   server.resetHandlers()
 })
-afterAll(() => server.close())
+afterAll(() => {
+  process.env.NEXT_PUBLIC_AI_ENABLED = originalAiEnabled
+  server.close()
+})
 
 function resetTestData() {
   // eslint-disable-next-line

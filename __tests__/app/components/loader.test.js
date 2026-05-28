@@ -7,7 +7,7 @@ describe('Loader', () => {
   it('renders Loader', () => {
     render(<Loader />)
 
-    const loaderText = screen.getByText('Loading')
+    const loaderText = screen.getByText('Loading...')
 
     expect(loaderText).toBeInTheDocument()
   })

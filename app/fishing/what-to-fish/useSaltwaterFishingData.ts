@@ -86,43 +86,57 @@ export async function getSaltwaterFishingData(
   cityStateList: CityState[],
   geolocation: string,
   waterType: string,
-  setLoadingText: Function,
+  setLoadingText: Function = () => {},
   species?: string[]
 ): Promise<FishingData> {
+  let normalizedGeolocation = geolocation
+  let normalizedWaterType = waterType
+  let normalizedSetLoadingText = setLoadingText
+  let normalizedSpecies = species
+
+  if (typeof normalizedSetLoadingText !== 'function') {
+    normalizedWaterType = setLoadingText as unknown as string
+    normalizedSetLoadingText = () => {}
+  }
+
   let fishingData = new FishingData()
 
-  setLoadingText('Loading weather...')
-  const weather = await getWeather(zip, cityState, geolocation)
+  normalizedSetLoadingText('Loading weather...')
+  const weather = await getWeather(zip, cityState, normalizedGeolocation)
 
   const location =
-    geolocation !== '' ? geolocation : cityState !== '' ? cityState : zip
+    normalizedGeolocation !== ''
+      ? normalizedGeolocation
+      : cityState !== ''
+        ? cityState
+        : zip
 
   if (location == '') {
     return fishingData
   }
 
   if (weather && weather.location) {
-    setLoadingText('Getting fishing seasons...')
+    normalizedSetLoadingText('Getting fishing seasons...')
     fishingData.seasons = getFishingSeasons()
-    setLoadingText('Getting weather values...')
+    normalizedSetLoadingText('Getting weather values...')
     fishingData.weather = getWeatherValues(weather, fishingData.seasons)
 
     if (isAiEnabled()) {
       try {
-        setLoadingText('AI is analyzing fishing conditions...')
+        normalizedSetLoadingText('AI is analyzing fishing conditions...')
         const aiData = await getAiGeneratedFishingData({
           location: weather.location,
           weather,
-          species: species || [],
+          species: normalizedSpecies || [],
           seasons: fishingData.seasons,
-          waterType,
+          waterType: normalizedWaterType,
           candidates: { baitsToUse: [], stylesToUse: [] },
         })
         if (aiData) {
           fishingData.activeSpecies = aiData.activeSpecies
           fishingData.species =
-            species !== undefined && species.length > 0
-              ? species
+            normalizedSpecies !== undefined && normalizedSpecies.length > 0
+              ? normalizedSpecies
               : aiData.species
           if (aiData.seasons && aiData.seasons.trim() !== '') {
             fishingData.seasons = aiData.seasons
@@ -133,13 +147,13 @@ export async function getSaltwaterFishingData(
           fishingData.tackle = aiData.tackle
           fishingData.aiGenerated = true
           fishingData.aiSource = aiData.source
-          setLoadingText('Determining fishing conditions...')
+          normalizedSetLoadingText('Determining fishing conditions...')
           fishingData.fishingConditions = getFishingConditions(
             weather,
             fishingData,
             weatherForecastToUse
           )
-          setLoadingText('Loading...')
+          normalizedSetLoadingText('Loading...')
           return fishingData
         }
       } catch (error) {
@@ -156,21 +170,24 @@ export async function getSaltwaterFishingData(
             ].waterTemp
           )
 
-    setLoadingText('Getting active species...')
-    fishingData.activeSpecies = await getSpecies(waterTemp, waterType)
+    normalizedSetLoadingText('Getting active species...')
+    fishingData.activeSpecies = await getSpecies(
+      waterTemp,
+      normalizedWaterType
+    )
 
     fishingData.species =
-      species !== undefined ? species : fishingData.activeSpecies
+      normalizedSpecies !== undefined ? normalizedSpecies : fishingData.activeSpecies
 
-    setLoadingText('Picking bait...')
+    normalizedSetLoadingText('Picking bait...')
     fishingData.baitRecommendations = await pickBaitRecommendations(
       weather,
       fishingData.species,
       fishingData.seasons,
-      waterType
+      normalizedWaterType
     )
 
-    setLoadingText('Loading tackle...')
+    normalizedSetLoadingText('Loading tackle...')
     let tackleList: Tackle[] = []
     await fetch('/api/tackle')
       .then((res) => res.json())
@@ -178,24 +195,24 @@ export async function getSaltwaterFishingData(
         tackleList = json.tackle
       })
 
-    setLoadingText('Picking tackle...')
+    normalizedSetLoadingText('Picking tackle...')
     fishingData.tackle = await pickTackle(
       tackleList,
       fishingData,
       waterTemp,
-      waterType
+      normalizedWaterType
     )
 
-    setLoadingText('Determining fishing conditions...')
+    normalizedSetLoadingText('Determining fishing conditions...')
     fishingData.fishingConditions = getFishingConditions(
       weather,
       fishingData,
       weatherForecastToUse
     )
 
-    setLoadingText('Loading...')
+    normalizedSetLoadingText('Loading...')
   } else if (
-    geolocation !== '' ||
+    normalizedGeolocation !== '' ||
     cityState !== '' ||
     (zip !== '' && zip.length == 5)
   ) {
