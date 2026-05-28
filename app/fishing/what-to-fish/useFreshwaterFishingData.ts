@@ -401,8 +401,8 @@ export async function getFreshwaterFishingData(
     normalizedGeolocation !== ''
       ? normalizedGeolocation
       : cityState !== ''
-        ? cityState
-        : zip
+      ? cityState
+      : zip
 
   if (location == '') {
     return fishingData
@@ -469,13 +469,12 @@ export async function getFreshwaterFishingData(
           )
 
     normalizedSetLoadingText('Getting active species...')
-    fishingData.activeSpecies = await getSpecies(
-      waterTemp,
-      normalizedWaterType
-    )
+    fishingData.activeSpecies = await getSpecies(waterTemp, normalizedWaterType)
 
     fishingData.species =
-      normalizedSpecies !== undefined ? normalizedSpecies : fishingData.activeSpecies
+      normalizedSpecies !== undefined
+        ? normalizedSpecies
+        : fishingData.activeSpecies
 
     normalizedSetLoadingText('Picking bait...')
     fishingData.baitRecommendations = await pickBaitRecommendations(

@@ -516,7 +516,9 @@ describe('useFishingData', () => {
     )
 
     expect(
-      result.baitRecommendations.stylesToUse.some((style) => style.name === 'dark')
+      result.baitRecommendations.stylesToUse.some(
+        (style) => style.name === 'dark'
+      )
     ).toBeTruthy()
   })
 
