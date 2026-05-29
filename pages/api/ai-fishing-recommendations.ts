@@ -26,6 +26,13 @@ function sanitizeTackleItems(items: any[]): any[] {
   }))
 }
 
+function sanitizeTips(items: any[]): string[] {
+  return (items || [])
+    .map((item) => (typeof item === 'string' ? item.trim() : ''))
+    .filter((item) => item !== '')
+    .slice(0, 10)
+}
+
 function sanitizeBestFishingTimes(bestFishingTimes: any): {
   ok: string
   good: string
@@ -136,6 +143,7 @@ export default async function handler(req: any, res: any) {
             'Confidence means how well an item should work for these exact conditions.',
             'Every tackle item must include a type array.',
             'Use practical freshwater/saltwater techniques based on waterType.',
+            'Return 3 to 7 short, practical tips that are directly useful for this exact location, weather, season, and species context.',
             'Return JSON only.',
           ],
           context: {
@@ -193,6 +201,9 @@ export default async function handler(req: any, res: any) {
                   tip: 'string',
                   weather: 'string',
                 },
+              ],
+              tips: [
+                'short, practical fishing tip tailored to the current weather, season, water type, and species context',
               ],
             },
           },
@@ -275,6 +286,7 @@ export default async function handler(req: any, res: any) {
           generated.seasonPhases || [],
           Array.isArray(generated.species) ? generated.species : []
         ),
+        tips: sanitizeTips(generated.tips || []),
         species: Array.isArray(generated.species) ? generated.species : [],
         activeSpecies: Array.isArray(generated.activeSpecies)
           ? generated.activeSpecies

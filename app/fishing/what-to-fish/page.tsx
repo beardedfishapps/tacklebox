@@ -43,7 +43,7 @@ export default function WhatToFish() {
       href: '/fishing/what-to-fish',
     },
   ]
-  const tips = [
+  const fallbackTips = [
     "When using a noisy lure, cast 5 to 10 times in the same spot before moving on. Even if a bass isn't hungry, annoying the bass is an equally efficient way to get a bite.",
     'Use colored baits that match the season, i.e. whites/silvers in winter, yellows/reds in summer.',
     'The day before a storm or similar major weather shift is the best time to fish. The day after is generally the worst.',
@@ -71,17 +71,18 @@ export default function WhatToFish() {
   const today = new Date()
   let ti = 0
 
-  if (today.getDate() > tips.length) {
+  if (today.getDate() > fallbackTips.length) {
     ti = today.getDate() - Math.trunc(today.getDate() / 10) * 10
   } else {
     ti = today.getDate()
   }
 
-  while (ti >= tips.length) {
+  while (ti >= fallbackTips.length) {
     ti--
   }
 
   let [tipIndex, setTipIndex] = useState(ti)
+  const tips = data.tips.length > 0 ? data.tips : fallbackTips
 
   useEffect(() => {
     const logger = Logger({})
@@ -519,7 +520,7 @@ export default function WhatToFish() {
         <div>
           <ContentSection title="Tip of the Day" isExpandedByDefault={true}>
             <div>
-              <div>{tips[tipIndex]}</div>
+              <div>{tips[tipIndex % tips.length]}</div>
               <div className="flex flex-row justify-between">
                 <button
                   onClick={() => {

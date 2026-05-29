@@ -440,6 +440,7 @@ export async function getFreshwaterFishingData(
             fishingData.seasons = aiData.seasons
           }
           fishingData.bestFishingTimes = aiData.bestFishingTimes
+          fishingData.tips = aiData.tips
           fishingData.seasonPhases = aiData.seasonPhases
           fishingData.baitRecommendations = aiData.baitRecommendations
           fishingData.tackle = aiData.tackle

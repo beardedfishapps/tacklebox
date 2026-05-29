@@ -53,6 +53,10 @@ describe('ai-fishing-recommendations api', () => {
                       notes: 'staging on structure',
                     },
                   ],
+                  tips: [
+                    'Fish the edge of the channel on the falling tide.',
+                    'Match your bait size to the forage in the area.',
+                  ],
                   species: ['striped bass', 'bluefish'],
                   activeSpecies: ['striped bass'],
                   baitRecommendations: {
@@ -104,6 +108,7 @@ describe('ai-fishing-recommendations api', () => {
         (phase) => phase.species === 'bluefish' && phase.phase === 'post-spawn'
       )
     ).toBeTruthy()
+    expect(res.body.generatedData.tips).toHaveLength(2)
   })
 
   it('fills out all best fishing times when the model omits some fields', async () => {
@@ -119,6 +124,7 @@ describe('ai-fishing-recommendations api', () => {
                     great: '5:00-7:00 PM',
                   },
                   seasonPhases: [],
+                  tips: [],
                   species: ['striped bass'],
                   activeSpecies: ['striped bass'],
                   baitRecommendations: {

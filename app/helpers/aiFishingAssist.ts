@@ -109,6 +109,7 @@ export async function getAiGeneratedFishingData(
     good: string
     great: string
   }
+  tips: string[]
   seasonPhases: {
     species: string
     phase: string
@@ -174,6 +175,11 @@ export async function getAiGeneratedFishingData(
           good: json.generatedData?.bestFishingTimes?.good || '',
           great: json.generatedData?.bestFishingTimes?.great || '',
         },
+        tips: Array.isArray(json.generatedData.tips)
+          ? json.generatedData.tips.filter(
+              (tip: any) => typeof tip === 'string'
+            )
+          : [],
         seasonPhases: Array.isArray(json.generatedData.seasonPhases)
           ? json.generatedData.seasonPhases
           : [],

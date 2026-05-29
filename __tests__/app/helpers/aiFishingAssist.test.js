@@ -83,6 +83,10 @@ describe('aiFishingAssist', () => {
               notes: 'staging near current breaks',
             },
           ],
+          tips: [
+            'Fish the outgoing tide for striped bass.',
+            'Use a slower retrieve when the wind dies down.',
+          ],
           species: ['striped bass'],
           activeSpecies: ['striped bass'],
           baitRecommendations: {
@@ -120,6 +124,7 @@ describe('aiFishingAssist', () => {
     expect(result.seasons).toContain('spring')
     expect(result.bestFishingTimes.great).toBe('5:00-7:00 PM')
     expect(result.seasonPhases[0].phase).toBe('pre-spawn')
+    expect(result.tips).toHaveLength(2)
     expect(result.tackle[0].name).toBe('Bucktail Jig')
     expect(result.tackle[0].type.includes('saltwater')).toBeTruthy()
   })

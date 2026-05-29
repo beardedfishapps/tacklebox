@@ -18,6 +18,7 @@ export default class FishingData {
     good: string
     great: string
   }
+  public tips: string[]
   public seasonPhases: {
     species: string
     phase: string
@@ -40,6 +41,7 @@ export default class FishingData {
       good: '',
       great: '',
     }
+    this.tips = []
     this.seasonPhases = []
   }
 }

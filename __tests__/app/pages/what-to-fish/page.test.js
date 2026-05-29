@@ -65,6 +65,62 @@ const server = setupServer(
         styles: [{ name: 'natural', confidence: 1, type: [], species: [] }],
       })
     )
+  }),
+  rest.post('/api/ai-fishing-recommendations', (req, res, ctx) => {
+    return res(
+      ctx.json({
+        source: 'openai',
+        generatedData: {
+          seasons: 'spring',
+          bestFishingTimes: {
+            ok: '6:00-8:00 AM',
+            good: '8:00-10:00 AM',
+            great: '5:00-7:00 PM',
+          },
+          seasonPhases: [
+            {
+              species: 'largemouth bass',
+              phase: 'pre-spawn',
+              confidence: 9,
+              notes: 'staging on shallow cover',
+            },
+            {
+              species: 'largemouth bass',
+              phase: 'spawn',
+              confidence: 8,
+              notes: 'look for bedding fish',
+            },
+            {
+              species: 'largemouth bass',
+              phase: 'post-spawn',
+              confidence: 7,
+              notes: 'target recovering fish',
+            },
+          ],
+          tips: [
+            'Work the windblown bank first and keep casts tight to cover.',
+          ],
+          species: ['largemouth bass'],
+          activeSpecies: ['largemouth bass'],
+          baitRecommendations: {
+            baitsToUse: [{ name: 'worm', confidence: 9 }],
+            stylesToUse: [{ name: 'natural', confidence: 8 }],
+          },
+          tackle: [
+            {
+              name: 'Texas Rig',
+              confidence: 9,
+              species: ['largemouth bass'],
+              waterTemp: ['warm'],
+              type: ['reaction', 'freshwater'],
+              depth: ['shallow'],
+              tip: 'Slow roll it near cover.',
+              weather: 'Cloud',
+            },
+          ],
+        },
+      })
+    )
   })
 )
 
@@ -156,6 +212,23 @@ describe('WhatToFish', () => {
     const heading = await screen.findByLabelText('ZIP Code')
 
     expect(heading).toBeInTheDocument()
+  })
+
+  it('shows an AI-generated tip when AI mode is enabled', async () => {
+    process.env.NEXT_PUBLIC_AI_ENABLED = 'true'
+    const user = userEvent.setup()
+
+    render(<WhatToFish />)
+
+    const combobox = await screen.findByLabelText('State')
+    await user.selectOptions(combobox, 'Boston,Massachusetts')
+
+    const aiTip = await screen.findByText(
+      /Work the windblown bank first and keep casts tight to cover/i
+    )
+
+    expect(aiTip).toBeInTheDocument()
+    process.env.NEXT_PUBLIC_AI_ENABLED = 'false'
   })
 
   it('resets to initial display when Clear is clicked', async () => {
