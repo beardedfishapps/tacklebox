@@ -26,13 +26,58 @@ function sanitizeTackleItems(items: any[]): any[] {
   }))
 }
 
-function sanitizeSeasonPhases(items: any[]): any[] {
-  return (items || []).map((item) => ({
-    species: item?.species || '',
-    phase: item?.phase || '',
-    confidence: clamp(safeNumber(item?.confidence, 10), 0, 999),
-    notes: item?.notes || '',
-  }))
+function sanitizeBestFishingTimes(bestFishingTimes: any): {
+  ok: string
+  good: string
+  great: string
+} {
+  return {
+    ok:
+      bestFishingTimes?.ok ||
+      'Early morning and late evening around low light.',
+    good:
+      bestFishingTimes?.good ||
+      'Mid-morning through early afternoon when conditions stay stable.',
+    great:
+      bestFishingTimes?.great ||
+      'Sunrise, sunset, and other low-light windows.',
+  }
+}
+
+const requiredSeasonPhases = ['pre-spawn', 'spawn', 'post-spawn']
+
+function sanitizeSeasonPhases(items: any[], requestedSpecies: string[]): any[] {
+  const normalized = (items || [])
+    .map((item) => ({
+      species: item?.species || '',
+      phase: item?.phase || '',
+      confidence: clamp(safeNumber(item?.confidence, 10), 0, 999),
+      notes: item?.notes || '',
+    }))
+    .filter(
+      (item) => item.species !== '' && requiredSeasonPhases.includes(item.phase)
+    )
+
+  const seen = new Set(
+    normalized.map((item) => `${item.species}::${item.phase}`)
+  )
+
+  ;(requestedSpecies || []).forEach((species) => {
+    requiredSeasonPhases.forEach((phase) => {
+      const key = `${species}::${phase}`
+      if (!seen.has(key)) {
+        normalized.push({
+          species,
+          phase,
+          confidence: 0,
+          notes: 'AI did not return this phase explicitly.',
+        })
+        seen.add(key)
+      }
+    })
+  })
+
+  return normalized
 }
 
 function parseModelJson(text: string): any | null {
@@ -79,7 +124,7 @@ export default async function handler(req: any, res: any) {
 
   const systemPrompt =
     mode === 'generate_all'
-      ? 'You are a fishing recommendation model. Analyze location, weather, water type, seasons, and requested species context. Return valid JSON only in the exact generatedData schema requested, including confidence 0-999.'
+      ? 'You are a fishing recommendation model. Analyze location, weather, water type, seasons, and requested species context. Return valid JSON only in the exact generatedData schema requested, including confidence 0-999. For seasonPhases, return exactly three entries for each requested species: pre-spawn, spawn, and post-spawn.'
       : 'You are a fishing recommendation model. Analyze location, weather, water type, species, and seasons. Return valid JSON only with baitsToUse and stylesToUse arrays. Keep existing item shape and include confidence as an integer 0-999.'
 
   const userPrompt =
@@ -225,12 +270,11 @@ export default async function handler(req: any, res: any) {
       const generated = parsed.generatedData || {}
       const generatedData = {
         seasons: typeof generated.seasons === 'string' ? generated.seasons : '',
-        bestFishingTimes: {
-          ok: generated?.bestFishingTimes?.ok || '',
-          good: generated?.bestFishingTimes?.good || '',
-          great: generated?.bestFishingTimes?.great || '',
-        },
-        seasonPhases: sanitizeSeasonPhases(generated.seasonPhases || []),
+        bestFishingTimes: sanitizeBestFishingTimes(generated.bestFishingTimes),
+        seasonPhases: sanitizeSeasonPhases(
+          generated.seasonPhases || [],
+          Array.isArray(generated.species) ? generated.species : []
+        ),
         species: Array.isArray(generated.species) ? generated.species : [],
         activeSpecies: Array.isArray(generated.activeSpecies)
           ? generated.activeSpecies
